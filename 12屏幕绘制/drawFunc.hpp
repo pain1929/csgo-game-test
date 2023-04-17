@@ -30,6 +30,12 @@ void Text(ID3DXFont* pFont , const char* text , RECT rect , D3DCOLOR color) {
     pFont->DrawTextA(NULL, text, -1, &rect, DT_LEFT | DT_NOCLIP, color);
 }
 
+//宽字符
+void Text(ID3DXFont* pFont, const wchar_t* text, RECT rect, D3DCOLOR color) {
+    
+    pFont->DrawTextW(NULL, text, -1, &rect, DT_LEFT | DT_NOCLIP, color);
+}
+
 //绘制圆圈
 void DrawCircle(float centerX , float centerY , int R , D3DCOLOR color, IDirect3DDevice9* pDevice) {
 
