@@ -8,6 +8,8 @@
 
 #include "drawFunc.hpp"
 
+#include "getFunc.h"   //引入头文件 2023/5/21 改动
+
 #pragma comment(lib , "d3d9.lib")
 #pragma comment(lib , "d3dx9.lib")
 #pragma comment(lib , "detours.lib")
@@ -37,7 +39,9 @@ HRESULT __stdcall hook_func(IDirect3DDevice9* device) {
 
 void run() {
     //endScene 函数地址 : d3d9.dll + 0x63130
-    int funcaddr = (int)GetModuleHandle("d3d9.dll") + 0x63130;
+    //int funcaddr = (int)GetModuleHandle("d3d9.dll") + 0x63130;  导致错误改用下面方式实现 2023/5/21
+    
+    int funcaddr = (int)GetFunc(42);   //GetFunc是上面引入的头文件（getFunc.h）中的函数  2023/5/21
 
 
     oldFunc = (endScene)DetourFunction((PBYTE)funcaddr, (PBYTE)(hook_func));
