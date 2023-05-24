@@ -185,7 +185,7 @@ HWND CSGO_INFO::GetWindowHandle(DWORD PID) {
 bool CSGO_INFO::InGame()
 {
 	void* clientstate = *(void**)((int)CSGO_INFO::ENGINE + hazedumper::signatures::dwClientState);
-	return *(LONG_PTR*)((LONG_PTR)clientstate + hazedumper::signatures::dwClientState_state) == 6;		
+	return *(LONG_PTR*)((LONG_PTR)clientstate + hazedumper::signatures::dwClientState_State) == 6;		
 }	
 	
 	
