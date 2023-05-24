@@ -1,7 +1,6 @@
 #include "csgo.hpp"
 #include <Windows.h>
-
-
+#include <cmath>
 
 // pain1929 2023-05-01  五一快乐
 
@@ -27,7 +26,7 @@ namespace CSGO_INFO {
 	void* ENGINE = GetModuleHandle("engine.dll");
 	POS RES = WindowSize(GetWindowHandle(GetCurrentProcessId()));
 	bool InGame();
-	
+
 }
 class Player {
 public:
@@ -48,24 +47,27 @@ public:
 	CSGO_INFO::POS WorldToScreen(BONE bone);
 	static int MAX();
 	static Player GetLocalPlayer();
+	static void SetViewAngle(CSGO_INFO::POS);
+	static CSGO_INFO::POS GetLocalViewAngle();
+	CSGO_INFO::POS GetAngle(BONE);
 
 private:
-	
+
 };
 
 Player::Player(int index) {
-	this->address =  *(void**)((int)CSGO_INFO::CLIENT + hazedumper::signatures::dwEntityList + (index * 0x10));
+	this->address = *(void**)((int)CSGO_INFO::CLIENT + hazedumper::signatures::dwEntityList + (index * 0x10));
 }
 Player::Player(void* address) {
 	this->address = address;
 }
-Player::~Player(){}
+Player::~Player() {}
 
 bool Player::IsNULL() {
-	return this->address == 0 || 
-	this->GetHealth()>100 || 
-	this->GetHealth() <0 || 
-	(this->GetTeam()!=2 && this->GetTeam()!=3);
+	return this->address == 0 ||
+		this->GetHealth() > 100 ||
+		this->GetHealth() < 0 ||
+		(this->GetTeam() != 2 && this->GetTeam() != 3);
 }
 CSGO_INFO::POS Player::GetHead() {
 	CSGO_INFO::POS pos;
@@ -89,8 +91,52 @@ int Player::GetHealth() {
 }
 
 Player Player::GetLocalPlayer() {
-	void* addr =  *(void**)((int)CSGO_INFO::CLIENT + hazedumper::signatures::dwLocalPlayer);
+	void* addr = *(void**)((int)CSGO_INFO::CLIENT + hazedumper::signatures::dwLocalPlayer);
 	return Player(addr);
+}
+
+inline void Player::SetViewAngle(CSGO_INFO::POS pos)
+{
+	void* state = (void**)((LONG_PTR)CSGO_INFO::ENGINE + hazedumper::signatures::dwClientState);
+	*(CSGO_INFO::POS*)((LONG_PTR)state + hazedumper::signatures::dwClientState_ViewAngles) = pos;
+}
+
+inline CSGO_INFO::POS Player::GetLocalViewAngle()
+{
+	void* state = (void**)((LONG_PTR)CSGO_INFO::ENGINE + hazedumper::signatures::dwClientState);
+	return *(CSGO_INFO::POS*)((LONG_PTR)state + hazedumper::signatures::dwClientState_ViewAngles);
+}
+
+inline CSGO_INFO::POS Player::GetAngle(BONE bone)
+{
+	CSGO_INFO::POS back = { 0 };
+	CSGO_INFO::POS local_head = Player::GetLocalPlayer().GetHead();
+	CSGO_INFO::POS pos;
+	if (bone == BONE::HEAD) {
+		pos = this->GetHead();
+	}
+	else {
+		pos = this->GetRoot();
+	}
+
+	float a = pos.x - local_head.x;
+	float b = pos.y - local_head.y;
+	float c = sqrt(a * a + b * b);
+	float angles = atan(b / a);
+	if (a > 0) {
+		back.y = angles * (180 / 3.14159265359);
+	}
+	else {
+		back.y = angles * (180 / 3.14159265359) + 180;
+	}
+
+	b = pos.z - local_head.z;
+	angles = atan(b / c);
+	back.x = -angles * (180 / 3.14159265359);
+	if (back.y > 180) {
+		back.y = back.y - 360;
+	}
+	return back;
 }
 
 bool Player::IsLocalPlayer() {
@@ -135,12 +181,12 @@ CSGO_INFO::POS Player::WorldToScreen(BONE P) {
 		return { 0 , 0 ,0 };
 	}
 	CSGO_INFO::ViewMatrix viewMatrix = Player::GetViewMatrix();
-    CSGO_INFO::POS out;
+	CSGO_INFO::POS out;
 	float _x = viewMatrix.floats[0] * player_pos.x + viewMatrix.floats[1] * player_pos.y + viewMatrix.floats[2] * player_pos.z + viewMatrix.floats[3];
 	float _y = viewMatrix.floats[4] * player_pos.x + viewMatrix.floats[5] * player_pos.y + viewMatrix.floats[6] * player_pos.z + viewMatrix.floats[7];
 	out.z = viewMatrix.floats[12] * player_pos.x + viewMatrix.floats[13] * player_pos.y + viewMatrix.floats[14] * player_pos.z + viewMatrix.floats[15];
 	if (out.z <= 0) {
-		return {0 , 0 , 0};
+		return { 0 , 0 , 0 };
 	}
 	_x *= 1.f / out.z;
 	_y *= 1.f / out.z;
@@ -185,7 +231,6 @@ HWND CSGO_INFO::GetWindowHandle(DWORD PID) {
 bool CSGO_INFO::InGame()
 {
 	void* clientstate = *(void**)((int)CSGO_INFO::ENGINE + hazedumper::signatures::dwClientState);
-	return *(LONG_PTR*)((LONG_PTR)clientstate + hazedumper::signatures::dwClientState_State) == 6;		
-}	
-	
-	
+	return *(LONG_PTR*)((LONG_PTR)clientstate + hazedumper::signatures::dwClientState_State) == 6;
+}
+
