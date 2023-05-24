@@ -26,6 +26,7 @@ namespace CSGO_INFO {
 	void* CLIENT = GetModuleHandle("client.dll");
 	void* ENGINE = GetModuleHandle("engine.dll");
 	POS RES = WindowSize(GetWindowHandle(GetCurrentProcessId()));
+	bool InGame();
 	
 }
 class Player {
@@ -179,3 +180,12 @@ HWND CSGO_INFO::GetWindowHandle(DWORD PID) {
 	EnumWindows(enumFunc, (LPARAM)&PID);
 	return *(HWND*)&PID;
 }
+
+
+bool CSGO_INFO::InGame()
+{
+	void* clientstate = *(void**)((int)CSGO_INFO::ENGINE + hazedumper::signatures::dwClientState);
+	return *(LONG_PTR*)((LONG_PTR)clientstate + hazedumper::signatures::dwClientState_state) == 6;		
+}	
+	
+	
