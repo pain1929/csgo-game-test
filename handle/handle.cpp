@@ -9,6 +9,7 @@ LONG_PTR GetPID(const TCHAR* processName)
 	success = Process32First(snapshot, &pe);
 	if (_tcscmp(processName, pe.szExeFile) == 0)
 	{
+		CloseHandle(snapshot);
 		return pe.th32ProcessID;
 	}
 	while (success)
@@ -16,6 +17,7 @@ LONG_PTR GetPID(const TCHAR* processName)
 		success = Process32Next(snapshot, &pe);
 		if (_tcscmp(processName, pe.szExeFile) == 0)
 		{
+			CloseHandle(snapshot);
 			return pe.th32ProcessID;
 		}
 	}
